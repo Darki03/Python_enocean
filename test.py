@@ -4,7 +4,7 @@ from enocean.consolelogger import init_logging
 import enocean.utils
 from enocean.communicators.serialcommunicator import SerialCommunicator
 from enocean.protocol.packet import RadioPacket, Packet
-from enocean.protocol.constants import PACKET, RORG
+from enocean.protocol.constants import PACKET, RORG, DECRYPT_RESULT
 from enocean.protocol import security
 import sys
 import traceback
@@ -47,11 +47,14 @@ while communicator.is_alive():
         packet = Packet(PACKET.RADIO_ERP1, data=[], optional=[])
         packet = communicator.receive.get(block=True, timeout=1)
         if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.SEC_ENCAPS:
-            RLC_find = security.find_RLC(Key, packet.data[:-8], packet.data[-8:-5], [0x00, 0x00, 0x00], 0x00FFFF)
-            if RLC_find != None:
-                print(enocean.utils.to_hex_string(RLC_find))
-                Decode_packet = security.encdec_tlgrm(Key, packet, RLC_find, 0x8B)
-                print(enocean.utils.to_hex_string(Decode_packet.build()))
+            #RLC_find = security.find_RLC(Key, packet.data[:-8], packet.data[-8:-5], [0x00, 0x00, 0x00], 0x00FFFF)
+            Decode_packet = packet.decrypt(Key, SLF_TI=0x8B)
+            if Decode_packet[1] == DECRYPT_RESULT.OK:
+                print(enocean.utils.to_hex_string(Decode_packet[0].build()))
+                Decode_packet[0].select_eep(0x33, 0x00)
+                Decode_packet[0].parse_eep()
+                for k in Decode_packet[0].parsed:
+                    print('%s: %s' % (k, Decode_packet[0].parsed[k]))
         if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.VLD:
             packet.select_eep(0x05, 0x00)
             packet.parse_eep()

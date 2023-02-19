@@ -3,6 +3,7 @@ import logging
 from sys import version_info
 from collections import OrderedDict
 from bs4 import BeautifulSoup
+from enocean.protocol.packet import RadioPacket
 
 import enocean.utils
 from enocean.protocol.constants import RORG
@@ -49,33 +50,79 @@ telegrams = {
             }
             for telegram in Profile.find_all(recursive=False)
       }
-Profile_type = telegrams[0xD5][0x00][0x01]
+Profile_type = telegrams[0xD2][0x33][0x00]
 
-for source in Profile_type.find_all('datafield'):
-    print(source.name)
-    for data in source:
+Dat_send = enocean.utils.from_hex_string("8F:00:00:00:15:E0")
+Raw1664=RadioPacket.create_raw(rorg=RORG.VLD, Raw_Data=Dat_send, destination = [0x05, 0x03, 0x06, 0x1B])
+
+Condit = Profile_type.find_all('condition')
+
+if Condit is not None:
+    for option in Condit:
+        offset = int(option.find('bitoffs').string)
+        size = int(option.find('bitsize').string)
+        raw_cond = int(''.join(['1' if digit else '0' for digit in Raw1664._bit_data[offset:offset + size]]), 2)
+        cond = option.find('value', string = str(raw_cond))
+        if cond is not None:
+            Case = cond.find_parent('case')
+
+data_condit = Case.find_all('datafield', recursive = False)
+
+for source in data_condit:
+            for data in source:
+                if not data.name:
+                    continue
+                if data.name == 'range':
+                    rng = source.find('range')
+                    rng_min = float(rng.find('min').string)
+                    rng_max = float(rng.find('max').string)
+                    print(rng_max, rng_min)
+
+# print(len(Condit))
+# print([i.find('value', string = str(8)) for i in Condit])
+
+# for source in Profile_type.find_all('case'):
+#     print(source.name)
+#     offset = int(source.find('bitoffs').string)
+#     size = int(source.find('bitsize').string)
+#     raw_cond = int(''.join(['1' if digit else '0' for digit in Raw1664._bit_data[offset:offset + size]]), 2)
+#     cond = source.find('value', string = str(raw_cond))
+#     if cond is not None:
+#         print(cond.find_parent('case'))
+    # for data in source:
+    #     print(data.name)
+    #     if data.name == 'condition':
+    #         offset = int(source.find('bitoffs').string)
+    #         size = int(source.find('bitsize').string)
+    #         print(offset)
+    #         print(size)
+            
         
     # value_desc = source.find('item').find('value')
     # print(value_desc)
     # #print(value_desc.find_next('description').string.strip())
     # for data in source.contents:
 
-        if not data.name:
-                continue
-        if data.name == 'value':
-            print(data.name)
-            offset = int(data.find('bitoffs'))
-        if data.name == 'enum':
-            print(data.name)
-            print(source.find('shortcut'))
-            print(source.find('description').string or [0])
-            print(source.find('bitoffs'))
-            print(data.find('value', string=str(0)))
-            print(data.find('value', string=str(1)).find_next('description'))
-            offset = int(source.find('bitoffs').string)
-            print(offset)
-        if data.name == 'status':
-            print(data.name)
+        # if not data.name:
+        #         continue
+        
+        # if data.name == 'condition':
+        #     print(data.name)
+        # if data.name == 'value':
+        #     print(data.name)
+            
+            # offset = int(data.find('bitoffs'))
+        # if data.name == 'enum':
+        #     print(data.name)
+            # print(source.find('shortcut'))
+            # print(source.find('description').string or [0])
+            # print(source.find('bitoffs'))
+            # print(data.find('value', string=str(0)))
+            # print(data.find('value', string=str(1)).find_next('description'))
+            # offset = int(source.find('bitoffs').string)
+            # print(offset)
+        # if data.name == 'status':
+        #     print(data.name)
 
 print("******************")
 
