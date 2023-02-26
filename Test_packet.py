@@ -3,7 +3,7 @@
 from enocean.consolelogger import init_logging
 import enocean.utils
 from enocean.communicators.serialcommunicator import SerialCommunicator
-from enocean.protocol.packet import RadioPacket
+from enocean.protocol.packet import RadioPacket, Packet
 from enocean.protocol import security
 from enocean.protocol.eep import EEP
 from enocean.protocol.constants import PACKET, RORG
@@ -58,6 +58,17 @@ Raw1664_dec = Raw1664_enc.decrypt(Key, SLF_TI = 0x8B)[0]
 
 print(enocean.utils.to_hex_string(Raw1664_dec.data))
 print(enocean.utils.to_hex_string(Raw1664_dec.build()))
+
+print(len(Raw1664_enc.data))
+
+COMMAND = Packet(PACKET.COMMON_COMMAND,data=[0x17, 0x01, 0x00, 0x00, 0x00, 0x00], optional=[0xFF])
+print(enocean.utils.to_hex_string(COMMAND.build()))
+
+COMMAND = Packet(PACKET.COMMON_COMMAND,data=[0x17, 0x00, 0x00, 0x00, 0x00, 0x00], optional=[0xFF])
+print(enocean.utils.to_hex_string(COMMAND.build()))
+
+COMMAND = Packet(PACKET.COMMON_COMMAND,data=[0x3F])
+print(enocean.utils.to_hex_string(COMMAND.build()))
 #print(enocean.utils.to_hex_string(Raw1664_dec.build()))
 #print(len(Raw1664_dec.build()))
 # communicator.send(Raw1664)
