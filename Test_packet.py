@@ -36,7 +36,7 @@ def assemble_radio_packet(transmitter_id):
 
 Key = bytearray.fromhex("869FAB7D296C9E48CEBFF34DF637358A")
 
-Dat_send = enocean.utils.from_hex_string("8F:00:00:00:15:E0")
+Dat_send = enocean.utils.from_hex_string("20:00:00:00:15:E0")
 Raw1664=RadioPacket.create_raw(rorg=RORG.VLD, Raw_Data=Dat_send, destination = [0x05, 0x03, 0x06, 0x1B])
 
 print(enocean.utils.to_hex_string(Raw1664.data[:-5]))
