@@ -3,7 +3,7 @@
 from enocean.consolelogger import init_logging
 import enocean.utils
 from enocean.communicators.serialcommunicator import SerialCommunicator
-from enocean.protocol.packet import RadioPacket, Packet
+from enocean.protocol.packet import RadioPacket, Packet, ChainedMSG, MSGChainer
 from enocean.protocol.constants import PACKET, RORG, DECRYPT_RESULT
 from enocean.protocol import security
 import sys
@@ -33,15 +33,17 @@ print('The Base ID of your module is %s.' % enocean.utils.to_hex_string(communic
 #Initialize RLC
 RLC = []
 
+Chain = MSGChainer()
+
 # endless loop receiving radio packets
 while communicator.is_alive():
     try:
         # Loop to empty the queue...
         packet = Packet(PACKET.RADIO_ERP1, data=[], optional=[])
         packet = communicator.receive.get(block=True, timeout=1)
-        if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.SEC_ENCAPS and ( packet.sender == [0x05, 0x03, 0x06, 0x1B] or packet.destination == [0x05, 0x03, 0x06, 0x1B]):
+        if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.SEC_ENCAPS and (packet.destination == [0x05, 0x03, 0x06, 0x1B] or packet.sender == [0x05, 0x03, 0x06, 0x1B]):
             Decode_packet = packet.decrypt(Key, RLC, SLF_TI=0x8B)
-            print(Decode_packet[1], Decode_packet[2])
+            # print(Decode_packet[1], Decode_packet[2])
             if Decode_packet[1] == DECRYPT_RESULT.OK:
                 # print(enocean.utils.to_hex_string(Decode_packet[0].build()))
                 RLC = Decode_packet[2]
