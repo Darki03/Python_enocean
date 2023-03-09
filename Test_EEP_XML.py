@@ -19,36 +19,49 @@ print(enocean.utils.to_hex_string(Test_packet.build()))
 
 
 #Load eep268.xml file get from http://tools.enocean-alliance.org/EEPViewer/#2
-# with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'eep268.xml'), 'r', encoding='UTF-16LE') as xml_file:
-#     xml_file.readline()
-#     EEP_soup = BeautifulSoup(xml_file.read(), features='xml')
+with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'eep268.xml'), 'r', encoding='UTF-16LE') as xml_file:
+    xml_file.readline()
+    EEP_soup = BeautifulSoup(xml_file.read(), features='xml')
 
-# #Profile tag
-# Profile = EEP_soup.profile
+#Profile tag
+Profile = EEP_soup.profile
 
 
-# print("******************")
+print("******************")
 
 #Load XML [RORG][FUNC][TYPE] : Type contents
-# telegrams = {
-#             enocean.utils.from_hex_string(telegram.number.string): {
-#                 enocean.utils.from_hex_string(function.number.string): {
-#                     enocean.utils.from_hex_string(type.number.string, ): type
-#                     for type in function.find_all('type', recursive=False)
-#                 }
-#                 for function in telegram.find_all('func', recursive=False)
-#             }
-#             for telegram in Profile.find_all(recursive=False)
-#       }
+telegrams = {
+            enocean.utils.from_hex_string(telegram.number.string): {
+                enocean.utils.from_hex_string(function.number.string): {
+                    enocean.utils.from_hex_string(type.number.string, ): type
+                    for type in function.find_all('type', recursive=False)
+                }
+                for function in telegram.find_all('func', recursive=False)
+            }
+            for telegram in Profile.find_all(recursive=False)
+      }
 
 #Get [RORG][FUNC][TYPE] contents for tests
 # Profile_type = telegrams[0xD5][0x00][0x01]
-# Profile_type = telegrams[0xD2][0x33][0x00]
+Profile_type = telegrams[0xD2][0x33][0x00]
 # Profile_type = telegrams[0xF6][0x02][0x02]
 
-# Dat_send = enocean.utils.from_hex_string("8F:00:00:00:15:E0")
-# Raw1664=RadioPacket.create_raw(rorg=RORG.VLD, Raw_Data=Dat_send, destination = [0x05, 0x03, 0x06, 0x1B])
+Dat_send = enocean.utils.from_hex_string("8F:00:00:00:15:E0")
+Raw1664=RadioPacket.create_raw(rorg=RORG.VLD, Raw_Data=Dat_send, destination = [0x05, 0x03, 0x06, 0x1B])
 
+Raw1664.select_eep(0x33, 0x00)
+Raw1664.parse_eep()
+
+print(Raw1664.parsed['MID']['raw_value'])
+print(Raw1664.parsed['REQ']['raw_value'])
+
+A = Raw1664.parsed['REQ']['raw_value']
+
+if A == 0 or 15:
+    print("coucou1")
+A = 0
+if A == 0 or 15:
+    print("coucou2")
 # Dat_send = [enocean.utils.from_hex_string("30")]
 # Raw1664=RadioPacket.create_raw(rorg=RORG.RPS, Raw_Data=Dat_send, status=0x30)
 # print(enocean.utils.to_hex_string(Raw1664.build()))
